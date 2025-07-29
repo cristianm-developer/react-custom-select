@@ -1,6 +1,9 @@
 
 # react-custom-select
 
+Live preview with Storybook is available at:  
+https://cristianm-developer.github.io/react-custom-select/
+
 A customizable **React Select component** with support for prefix and suffix elements and options as children. Designed for easy integration, fully typed with TypeScript, and styled with built-in CSS.
 
 ---
