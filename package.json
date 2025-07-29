@@ -8,6 +8,10 @@
   "files": [
     "dist","README.ms"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cristianm-developer/react-custom-select"
+  },
   "exports": {
     ".": {
       "import": "./dist/index.js",
