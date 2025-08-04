@@ -1,4 +1,4 @@
-import { Children, isValidElement, ReactElement, ReactNode, useEffect, useRef, useState } from "react";
+import { Children, ForwardedRef, forwardRef, isValidElement, ReactElement, ReactNode, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { Prefix, Suffix } from "./Addon.component";
 import Option, { OptionProps } from "./Option.component";
 import './Select.scss';
@@ -9,7 +9,13 @@ export interface SelectValue{
     value: string;
 }
 
-const Select = (props: {
+export interface SelectObjectRef{
+    element: HTMLDivElement | null;
+    open: () => void;
+    close: () => void;
+}
+
+export interface SelectProps{
     value?: SelectValue,
     children?: ReactNode,
     prefix?: string,
@@ -18,13 +24,23 @@ const Select = (props: {
     onChange?: (value: string|undefined|null, label: string|undefined|null) => void,
     placeholder?: string,
     open?: boolean
-}) => {
+}
+
+const Select = forwardRef<SelectObjectRef, SelectProps>((props: SelectProps, ref: ForwardedRef<SelectObjectRef>) => {
     
     const [isOpen, setIsOpen] = useState(props.open ? true : false);
     const [internalValue, setInternalValue] = useState<string|null|undefined>(null);
     const [activeLabel, setActiveLabel] = useState<string|null|undefined>(null);
     
+    const internalRef = useRef<HTMLDivElement>(null);
     const optionBoxRef = useRef<HTMLDivElement>(null);
+
+    const allowedTypes = [Option, Prefix, Suffix];
+    const childrenArray: ReactNode[] = Children.toArray(props.children);
+
+    let prefix: ReactElement<typeof Prefix> | null = null;
+    let suffix: ReactElement<typeof Suffix> | null = null;
+    let options: ReactElement<OptionProps>[] = [];
 
     const handleClickOutside = (event: MouseEvent) => {
         if(optionBoxRef.current && !optionBoxRef.current.contains(event.target as Node))
@@ -40,35 +56,16 @@ const Select = (props: {
         handleSelectedOption({value: props.value?.value, label: props.value?.label});
     }, [props.value])
     
-    const allowedTypes = [Option, Prefix, Suffix];
-    const childrenArray: ReactNode[] = Children.toArray(props.children);
-    
-    let prefix: ReactElement<typeof Prefix> | null = null;
-    let suffix: ReactElement<typeof Suffix> | null = null;
-    let options: ReactElement<typeof Option>[] = [];
+
 
     function validateChildOrWarn(child: ReactNode): asserts child is ReactElement {
         if (!isValidElement(child)) {
             const allowedNames = Array.isArray(allowedTypes) ? allowedTypes.map(e => e.name).join(", ") : "";
             let actual: string = typeof child;
-            if (isValidElement(child)) {
-                if (typeof child.type === 'function') {
-                    actual = (child.type as any).displayName || (child.type as any).name || actual;
-                } else if (typeof child.type === 'string') {
-                    actual = child.type;
-                }
-            }
-            throw new Error(`react-select error: Select child of type "${actual}" is invalid. Only [${allowedNames}] are allowed.`);
-        }
-
-        if (typeof child.type !== 'function') {
-            const typeName = String(child.type);
-            throw new Error(`react-select error: Child of type "${typeName}" is not allowed. Only components ${allowedTypes.map(c => c.name).join(', ')} are allowed.`);
-        }
-        
-        if (!allowedTypes.some(allowed => allowed === child.type)) {
-            const typeName = (child.type as any).name ?? 'Unknown';
-            throw new Error(`react-select error: Child component <${typeName}> is not allowed. Only ${allowedTypes.map(c => c.name).join(', ')} are allowed.`);
+            let actualType = (child as any).type;
+            const actualName = (actualType as any).displayName || (actualType as any).name || typeof actualType;
+            if (!allowedTypes.includes(actualType))
+                throw new Error(`react-select error: Select child of type "${actual}" is invalid. Only [${allowedNames}] are allowed.`);
         }
     };
 
@@ -117,9 +114,15 @@ const Select = (props: {
                 );
         }
     });
-    
+
+    useImperativeHandle(ref, () => ({
+        element: internalRef.current,
+        open: () => setIsOpen(true),
+        close: () => setIsOpen(false)
+    }));
+
     return (
-        <div className={`react-select ${props.className} ${isOpen ? 'open' : ''}`} onClick={() => setIsOpen((prev)=> prev ? false : true )} tabIndex={0}>
+        <div ref={internalRef} className={`react-select ${props.className} ${isOpen ? 'open' : ''}`} onClick={() => setIsOpen((prev)=> prev ? false : true )} tabIndex={0}>
             <div className="form-value-box">
                 {prefix}
                 {internalValue 
@@ -136,6 +139,6 @@ const Select = (props: {
             }
         </div>
     )
-}
+}) 
 
 export default Select;
