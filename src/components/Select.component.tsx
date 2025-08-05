@@ -122,7 +122,7 @@ const Select = forwardRef<SelectObjectRef, SelectProps>((props: SelectProps, ref
     }));
 
     return (
-        <div ref={internalRef} className={`react-select ${props.className} ${isOpen ? 'open' : ''}`} onClick={() => setIsOpen((prev)=> prev ? false : true )} tabIndex={0}>
+        <div ref={internalRef} className={`react-select ${props.className ?? ''} ${isOpen ? 'open' : ''}`} onClick={() => setIsOpen((prev)=> prev ? false : true )} tabIndex={0}>
             <div className="form-value-box">
                 {prefix}
                 {internalValue 
