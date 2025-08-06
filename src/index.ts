@@ -1,6 +1,6 @@
 import { Prefix, Suffix } from "./components/Addon.component";
-import Select from "./components/Select.component";
 import Option from "./components/Option.component";
+import Select from "./components/Select.component";
 
 import type { OptionProps, OptionObjectRef } from "./components/Option.component";
 import type { SelectProps, SelectObjectRef } from "./components/Select.component";

@@ -1,144 +1,167 @@
-import { Children, ForwardedRef, forwardRef, isValidElement, ReactElement, ReactNode, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { Prefix, Suffix } from "./Addon.component";
-import Option, { OptionProps } from "./Option.component";
+import { Children, cloneElement, createElement, ForwardedRef, forwardRef, isValidElement, JSX, JSXElementConstructor, MutableRefObject, ReactElement, ReactNode, Ref, RefAttributes, RefCallback, RefObject, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
+import { AddonObjectRef, AddonProps, Prefix, Suffix } from "./Addon.component";
+import { Value, ValueObjectRef, ValueProps } from "./Value.component";
+import { Placeholder, PlaceholderObjectRef, PlaceholderProps } from "./Placeholder.component";
+import Option, { OptionObjectRef, OptionProps } from "./Option.component";
 import './Select.scss';
-import React from "react";
+import { detectNode, handleNodeValue } from "./libs/settingElements";
 
-export interface SelectValue{
-    label: string;
-    value: string;
-}
 
-export interface SelectObjectRef{
-    element: HTMLDivElement | null;
+
+export interface SelectObjectRef {
+    mainElement: HTMLDivElement | null;
+    formValueBoxElement: HTMLDivElement | null;
+    optionBoxElement: HTMLDivElement | null;
+
+    prefixRef: AddonObjectRef | null;
+    suffixRef: AddonObjectRef | null;
+    valueRef: ValueObjectRef | null;
+    placeholderRef: PlaceholderObjectRef | null;
+
     open: () => void;
     close: () => void;
+
+    value: string | undefined;
+    isOpen: boolean;
 }
 
-export interface SelectProps{
-    value?: SelectValue,
+export interface SelectProps {
+    value?: ReactNode,
     children?: ReactNode,
-    prefix?: string,
-    suffix?: string,
+    prefix?: ReactNode,
+    suffix?: ReactNode,
+    options?: ReactNode,
+    placeholder?: ReactNode,
     className?: string,
-    onChange?: (value: string|undefined|null, label: string|undefined|null) => void,
-    placeholder?: string,
+    onChange?: (value: string | undefined | null, label: ReactNode) => void,
     open?: boolean
 }
 
-const Select = forwardRef<SelectObjectRef, SelectProps>((props: SelectProps, ref: ForwardedRef<SelectObjectRef>) => {
-    
+
+export const Select = forwardRef<SelectObjectRef, SelectProps>((props: SelectProps, ref: ForwardedRef<SelectObjectRef>) => {
+
     const [isOpen, setIsOpen] = useState(props.open ? true : false);
-    const [internalValue, setInternalValue] = useState<string|null|undefined>(null);
-    const [activeLabel, setActiveLabel] = useState<string|null|undefined>(null);
-    
+
     const internalRef = useRef<HTMLDivElement>(null);
+    const formValueBox = useRef<HTMLDivElement>(null);
     const optionBoxRef = useRef<HTMLDivElement>(null);
 
-    const allowedTypes = [Option, Prefix, Suffix];
-    const childrenArray: ReactNode[] = Children.toArray(props.children);
+    const childrenArray: ReactElement[] = Children.toArray(props.children ?? []).filter(e => isValidElement(e));
 
-    let prefix: ReactElement<typeof Prefix> | null = null;
-    let suffix: ReactElement<typeof Suffix> | null = null;
-    let options: ReactElement<OptionProps>[] = [];
+    const [prefixEl, setPrefixEl] = useState<ReactElement<AddonProps> | undefined>(undefined);
+    const prefixRef = useRef<AddonObjectRef>(null);
+    const [suffixEl, setSuffixEl] = useState<ReactElement<AddonProps> | undefined>(undefined);
+    const suffixRef = useRef<AddonObjectRef>(null);
+    const [valueEl, setValueEl] = useState<ReactElement<ValueProps> | undefined>(undefined);
+    const valueRef = useRef<ValueObjectRef>(null);
+    const [placeholderEl, setPlaceholderEl] = useState<ReactElement<PlaceholderProps> | undefined>(undefined);
+    const placeholderRef = useRef<PlaceholderObjectRef>(null);
+    const [optionsEls, setOptionsEls] = useState<ReactElement<OptionProps>[] | undefined>(undefined);
+    const optionsRef = useRef<(OptionObjectRef | undefined)[] | undefined>(null);
 
-    const handleClickOutside = (event: MouseEvent) => {
-        if(optionBoxRef.current && !optionBoxRef.current.contains(event.target as Node))
-            setIsOpen(false);
+    let internalClassname = '';
+
+    if (props.className)
+        internalClassname = props.className.replaceAll(/\s+/g, ' ').trim();
+
+    const handleOptionClick = (selection: {value: string, label: ReactNode}) => {
+        setValueEl(createElement(Value, {label: selection.label, value: selection.value, ref: valueRef}));
+        props.onChange?.(selection.value, selection.label);
     }
 
-    useEffect(() => {
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+    function setInitialNodes() {
 
-    useEffect(() => {
-        handleSelectedOption({value: props.value?.value, label: props.value?.label});
-    }, [props.value])
-    
+        setPrefixEl(detectNode(props.prefix, Prefix, childrenArray, prefixRef));
+        setSuffixEl(detectNode(props.suffix, Suffix, childrenArray, suffixRef));
+        setPlaceholderEl(detectNode(props.placeholder, Placeholder, childrenArray, placeholderRef));
+        setValueEl(detectNode(props.value, Value, childrenArray, valueRef));
 
+        let optionsInternal: ReactElement<OptionProps>[] | undefined = undefined;
+        const optionsFromProps = props.options;
 
-    function validateChildOrWarn(child: ReactNode): asserts child is ReactElement {
-        if (!isValidElement(child)) {
-            const allowedNames = Array.isArray(allowedTypes) ? allowedTypes.map(e => e.name).join(", ") : "";
-            let actual: string = typeof child;
-            let actualType = (child as any).type;
-            const actualName = (actualType as any).displayName || (actualType as any).name || typeof actualType;
-            if (!allowedTypes.includes(actualType))
-                throw new Error(`react-select error: Select child of type "${actual}" is invalid. Only [${allowedNames}] are allowed.`);
+        const optionsFromChildren: ReactElement<OptionProps>[] = childrenArray.filter(e => e.type === Option) as ReactElement<OptionProps>[];
+
+        if (optionsFromProps) {
+            if (Array.isArray(optionsFromProps)) {
+                optionsRef.current = Array(optionsFromProps.length).fill(null);
+                optionsInternal = optionsFromProps.map((opt, index) => {
+                    const refCallback = (el: OptionObjectRef | null) => {
+                        optionsRef.current![index] = el!;
+                    }
+                    return handleNodeValue(opt, Option, { ref: refCallback, onSelect: handleOptionClick }) as ReactElement<OptionProps>;
+                });
+            } else {
+                optionsRef.current = [undefined];
+                optionsInternal = [handleNodeValue(optionsFromProps, Option, { ref: (el: OptionObjectRef | undefined) => optionsRef.current![0] = el, onSelect: handleOptionClick }) as ReactElement<OptionProps>];
+            }
+        } else if (optionsFromChildren.length) {
+            optionsRef.current = Array(optionsFromChildren.length).fill(null);
+            const newOptions: ReactElement<OptionProps>[] = [];
+            optionsFromChildren.forEach((child, index) => {
+                const refCallback: Ref<OptionObjectRef | undefined> = (el: OptionObjectRef | undefined) => {
+                    optionsRef.current![index] = el;
+                }
+
+                newOptions.push(cloneElement(child, { ref: refCallback, onSelect: handleOptionClick} as RefAttributes<OptionProps>) as ReactElement<OptionProps>);
+            });
+            optionsInternal = newOptions;
         }
-    };
-
-    if(props.prefix)
-        prefix = <Prefix>{props.prefix}</Prefix>
-    if(props.suffix)
-        suffix = <Suffix>{props.suffix}</Suffix>
-
-    function handleSelectedOption({value, label}: {value: string|null|undefined, label: string|null|undefined}) {
-        setInternalValue(value);
-        setActiveLabel(label);
-
-        props.onChange?.(value, label);
+        setOptionsEls(optionsInternal);
     }
 
-    childrenArray.forEach((child: ReactNode) => {
-        validateChildOrWarn(child);
-
-        const element = child as ReactElement;
-
-        switch (element.type){
-            case Prefix:
-                if(prefix)
-                    if(props.prefix)
-                        throw new Error("react-select error: Duplicate <Prefix> already set via props.prefix");
-                    else
-                        throw new Error("react-select error: Duplicate <Prefix> element");
-                else
-                    prefix = element as ReactElement<typeof Prefix>;
-                break;
-            case Suffix:   
-                if(suffix)
-                    if(props.suffix)
-                        throw new Error("react-select error: Duplicate <Suffix> already set via props.prefix");
-                    else
-                        throw new Error("react-select error: Duplicate <Suffix> element");
-                else
-                    suffix = element as ReactElement<typeof Suffix>;
-                break;
-            case Option:
-                options.push(
-                    React.cloneElement(element as React.ReactElement<any, any>, {
-                       onSelect: handleSelectedOption,
-                       selected: (element.props as OptionProps).value === internalValue
-                    })
-                );
-        }
-    });
+    useLayoutEffect(() => {
+        setInitialNodes();
+    }, [
+        props.children,
+        props.className,
+        props.onChange,
+        props.open,
+        props.options,
+        props.prefix,
+        props.suffix,
+        props.value,
+        props.placeholder
+    ]);
 
     useImperativeHandle(ref, () => ({
-        element: internalRef.current,
-        open: () => setIsOpen(true),
-        close: () => setIsOpen(false)
-    }));
+            mainElement: internalRef.current,
+            formValueBoxElement: formValueBox.current,
+            optionBoxElement: optionBoxRef.current,
 
-    return (
-        <div ref={internalRef} className={`react-select ${props.className ?? ''} ${isOpen ? 'open' : ''}`} onClick={() => setIsOpen((prev)=> prev ? false : true )} tabIndex={0}>
+            prefixRef: prefixRef.current,
+            suffixRef: suffixRef.current,
+            valueRef: valueRef.current,
+            placeholderRef: placeholderRef.current,
+
+            close: () => setIsOpen(false),
+            open: () => setIsOpen(true),
+
+            value: valueRef.current?.value,        
+            isOpen
+
+    }), []);
+
+    return <>
+        <div ref={internalRef} className={`react-select ${internalClassname ?? ''} ${isOpen ? 'open' : ''}`} onClick={() => setIsOpen((prev) => prev ? false : true)} tabIndex={0}>
             <div className="form-value-box">
-                {prefix}
-                {internalValue 
-                    ? <div className="form-value-field">{activeLabel}</div>
-                    : props.placeholder ? <div className="form-placeholder">{props.placeholder}</div> : null
+                {prefixEl}
+                {valueEl
+                    ? valueEl
+                    : placeholderEl
                 }
-                {suffix}
+                {suffixEl}
             </div>
-            {   isOpen 
-                ? (<div className="form-options-box" ref={optionBoxRef}>
-                        {options}
-                    </div>)
+            {isOpen
+                ? (
+                    <div className="form-options-box" ref={optionBoxRef}>
+                        {optionsEls}
+                    </div>
+                )
                 : null
             }
+
         </div>
-    )
-}) 
+    </>;
+});
 
 export default Select;

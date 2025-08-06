@@ -1,27 +1,44 @@
-import { JSX, memo, ReactNode } from "react";
+import { forwardRef, JSX, ReactNode, useRef, useImperativeHandle } from "react";
 
-export interface BaseProps {
-    children?: ReactNode,
-    className?: string
+export interface AddonProps {
+    children?: ReactNode;
+    className?: string;
+    label?: string;
 }
 
-const AddonComponent = memo((
+export interface AddonObjectRef {
+    element: HTMLDivElement | null;
+    label: string | undefined;
+}
+
+const AddonComponent = forwardRef<AddonObjectRef, AddonProps>((
     {
         children = null,
-        className
-    }: {
-        children?: ReactNode,
-        className: string
-    }
+        className = '',
+        label = undefined
+    },
+    ref
 ): JSX.Element => {
-    return <div className={className}>{children}</div>
+    const divRef = useRef<HTMLDivElement>(null);
+
+    useImperativeHandle(ref, () => ({
+        element: divRef.current,
+        label
+    }), [divRef.current]);
+
+    return <div ref={divRef} className={className}>{
+            label
+                ? <span>{label}</span>
+                : children
+            }
+         </div>
 });
 
-export const Prefix = (props: BaseProps): JSX.Element => {
-    return <AddonComponent className={`form-prefix ${props.className ?? ''}`}>{props.children}</AddonComponent>
-}
+export const Prefix = forwardRef<AddonObjectRef, AddonProps>((props, ref): JSX.Element => {
+    return <AddonComponent ref={ref} className={`form-prefix ${props.className ?? ''}`} label={props.label}>{props.children}</AddonComponent>
+});
 
-export const Suffix = (props: BaseProps): JSX.Element => {
-    return <AddonComponent className={`form-suffix ${props.className ?? ''}`}>{props.children}</AddonComponent>
-}
+export const Suffix = forwardRef<AddonObjectRef, AddonProps>((props, ref): JSX.Element => {
+    return <AddonComponent ref={ref} className={`form-suffix ${props.className ?? ''}`}  label={props.label}>{props.children}</AddonComponent>
+});
 
