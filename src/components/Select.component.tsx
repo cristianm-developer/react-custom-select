@@ -151,7 +151,7 @@ export const Select = forwardRef<SelectObjectRef, SelectProps>((props: SelectPro
 
     return <>
         <div ref={internalRef} className={`react-select ${internalClassname ?? ''} ${isOpen ? 'open' : ''}`} onClick={() => setIsOpen((prev) => prev ? false : true)} tabIndex={0}>
-            <div className="form-value-box">
+            <div ref={formValueBox} className="form-value-box">
                 {prefixEl}
                 {valueExist
                     ? valueEl
