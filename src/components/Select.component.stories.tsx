@@ -1,7 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { RefObject, useEffect, useRef } from 'react';
 import { Meta, StoryObj } from '@storybook/react';
 import { action } from 'storybook/actions';
-import Select, { SelectObjectRef } from "./Select.component";
+import Select, { SelectObjectRef, SelectProps } from "./Select.component";
 import Option, { OptionObjectRef } from './Option.component';
 import { Prefix, Suffix } from './Addon.component';
 import { Value } from './Value.component';
@@ -26,7 +26,9 @@ export const Default: Story = {
     },
     render: (args) => {
 
-        return <Select {...args} >
+        const internalRef: RefObject<SelectObjectRef|null> = useRef(null);
+
+        return <Select {...args} ref={internalRef}>
             <Prefix>Prefix</Prefix>
             <Suffix>Suffix</Suffix>            
      

@@ -132,34 +132,48 @@ export const Select = forwardRef<SelectObjectRef, SelectProps>((props: SelectPro
     ]);
 
     useImperativeHandle(ref, () => ({
-            mainElement: internalRef.current,
-            formValueBoxElement: formValueBox.current,
-            optionBoxElement: optionBoxRef.current,
-
-            prefixRef: prefixRef.current,
-            suffixRef: suffixRef.current,
-            valueRef: valueRef.current,
-            placeholderRef: placeholderRef.current,
-
-            close: () => setIsOpen(false),
-            open: () => setIsOpen(true),
-
-            value: valueRef.current?.value,        
-            isOpen
-
-    }), [
-        internalRef.current,
-        formValueBox.current,
-        optionBoxRef.current,
-        prefixRef.current,
-        suffixRef.current,
-        valueRef.current,
-        placeholderRef.current,
-        close,
-        open,
-        valueRef.current,
-        isOpen
-    ]);
+               get mainElement() {
+                   return internalRef.current;
+               },
+               get formValueBoxElement() {
+                   return formValueBox.current;
+               },
+               get optionBoxElement() {
+                   return optionBoxRef.current;
+               },
+   
+               get prefixRef() {
+                   return prefixRef.current;
+               },
+               get suffixRef() {
+                   return suffixRef.current;
+               },
+               get valueRef() {
+                   return valueRef.current;
+               },
+               get placeholderRef() {
+                   return placeholderRef.current;
+               },
+   
+               close: () => setIsOpen(false),
+               open: () => setIsOpen(true),
+   
+               value: valueRef.current?.value,
+               isOpen
+   
+       }), [
+           internalRef.current,
+           formValueBox.current,
+           optionBoxRef.current,
+           prefixRef.current,
+           suffixRef.current,
+           valueRef.current,
+           placeholderRef.current,
+           close,
+           open,
+           valueRef.current,
+           isOpen
+       ]);
 
     return <>
         <div ref={internalRef} className={`react-select ${internalClassname ?? ''} ${isOpen ? 'open' : ''}`} onClick={() => setIsOpen((prev) => prev ? false : true)} tabIndex={0}>
