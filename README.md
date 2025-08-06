@@ -19,6 +19,9 @@ This component solves that by allowing complete control over the select’s UI s
 - Built-in keyboard handling and click outside to close  
 - Styled with bundled CSS, easy to override  
 - TypeScript support for strong typings
+- The `value` prop is customizable as a React node, allowing you to render complex custom content inside the select box.
+- Refs are available for each component (`Select`, `Option`, `Prefix`, `Suffix`), enabling direct DOM access or imperative actions.
+- A built-in `<NoOptions>` component is provided to display a customizable message or UI when there are no options available to select.
 
 ---
 
