@@ -47,7 +47,7 @@ import Select, { Prefix, Suffix } from 'react-custom-select';
 import Option from 'react-custom-select/Option';
 
 function Example() {
-  const [value, setValue] = useState<{ label: string; value: string } | undefined>();
+  const [value, setValue] = useState<string|null>('Custom Value');
 
   return (
     <Select
