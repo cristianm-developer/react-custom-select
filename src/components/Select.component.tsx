@@ -62,6 +62,7 @@ export const Select = forwardRef<SelectObjectRef, SelectProps>((props: SelectPro
     const optionsRef = useRef<(OptionObjectRef | undefined)[] | undefined>(null);
 
     const [valueExist, setValueExist] = useState(false); 
+    const [valueChanged, setValueChanged] = useState(false);
 
     let internalClassname = '';
 
@@ -69,9 +70,11 @@ export const Select = forwardRef<SelectObjectRef, SelectProps>((props: SelectPro
         internalClassname = props.className.replaceAll(/\s+/g, ' ').trim();
 
     const handleOptionClick = (selection: {value: string, label: ReactNode}) => {
-        setValueEl(createElement(Value, {label: selection.label, value: selection.value, ref: valueRef}));
+        const valueObject = handleNodeValue(selection.label, Value, {ref: valueRef, selection});
+        setValueEl(valueObject);
         props.onChange?.(selection.value, selection.label);
-        setValueExist(!!selection.value)
+        setValueExist(!!selection.value || !!selection.label)
+        setValueChanged(true);
     }
 
     const setInitialNodes = () => {
@@ -79,8 +82,14 @@ export const Select = forwardRef<SelectObjectRef, SelectProps>((props: SelectPro
         setPrefixEl(detectNode(props.prefix, Prefix, childrenArray, prefixRef));
         setSuffixEl(detectNode(props.suffix, Suffix, childrenArray, suffixRef));
         setPlaceholderEl(detectNode(props.placeholder, Placeholder, childrenArray, placeholderRef));
-        const temporalValue = detectNode(props.value, Value, childrenArray, valueRef);
+        
+        let valueToUse = valueChanged 
+            ? valueEl
+            : props.value;
+        
+        const temporalValue = detectNode(valueToUse, Value, childrenArray, valueRef);
         setValueEl(temporalValue);
+        
         setValueExist(!!temporalValue);
         
         let optionsInternal: ReactElement<OptionProps>[] | undefined = undefined;

@@ -19,7 +19,6 @@ export const Value = forwardRef<ValueObjectRef, ValueProps>((props: ValueProps, 
     const [value, setValue] = useState<string|null|undefined>(null);
 
     useLayoutEffect(() => {
-        
         if (props.value) {
             setValue(props.value);
         } else if (internalRef.current) {

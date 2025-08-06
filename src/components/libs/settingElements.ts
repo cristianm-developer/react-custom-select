@@ -27,7 +27,7 @@ export function handleNodeValue<T extends keyof JSX.IntrinsicElements | JSXEleme
     propsOref: any
 ) {
     if (typeof node === 'string' || typeof node === "number") {
-        return createElement(targetNode, propsOref ? { ref: propsOref } : {}, node);
+        return createElement(targetNode, propsOref ?? {}, node);
     }
     if (isValidElement(node) && node.type === targetNode) {
         const element = node as ReactElement<any> & { ref?: Ref<any> };
