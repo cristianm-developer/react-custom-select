@@ -147,7 +147,19 @@ export const Select = forwardRef<SelectObjectRef, SelectProps>((props: SelectPro
             value: valueRef.current?.value,        
             isOpen
 
-    }), []);
+    }), [
+        internalRef.current,
+        formValueBox.current,
+        optionBoxRef.current,
+        prefixRef.current,
+        suffixRef.current,
+        valueRef.current,
+        placeholderRef.current,
+        close,
+        open,
+        valueRef.current,
+        isOpen
+    ]);
 
     return <>
         <div ref={internalRef} className={`react-select ${internalClassname ?? ''} ${isOpen ? 'open' : ''}`} onClick={() => setIsOpen((prev) => prev ? false : true)} tabIndex={0}>
