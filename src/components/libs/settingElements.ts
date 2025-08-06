@@ -12,8 +12,8 @@ export function detectNode<T extends JSXElementConstructor<any>>(
     }
     const nodesChildren = childrenArray.filter(e => e.type === targetNode);
     if ((el && nodesChildren.length) || nodesChildren.length > 1) {
-        const name = (targetNode as any).name ?? 'Unknow';
-        throw new Error(`Too many elements of ${name} detected`);
+        const name = (targetNode as any).name ?? 'Unknown';
+        throw new Error(`Too many elements of ${name} detected.`);
     } else if (nodesChildren.length == 1) {
         el = handleNodeValue(nodesChildren[0], targetNode, {ref})
     }
@@ -42,9 +42,9 @@ export function composeRefs<T>(
     ...refs: (Ref<T> | undefined | null)[]    
 ): RefCallback<T> {
     return (el: T | null) => {
+        
         for(const ref of refs){
             if(!ref) continue;
-
             if (typeof ref === 'function') {
                 ref(el);
             } else if (typeof ref === 'object' && 'current' in ref) {

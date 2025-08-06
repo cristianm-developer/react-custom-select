@@ -8,7 +8,7 @@ export interface AddonProps {
 
 export interface AddonObjectRef {
     element: HTMLDivElement | null;
-    label: string | undefined;
+    label: ReactNode | undefined;
 }
 
 const AddonComponent = forwardRef<AddonObjectRef, AddonProps>((
@@ -23,8 +23,8 @@ const AddonComponent = forwardRef<AddonObjectRef, AddonProps>((
 
     useImperativeHandle(ref, () => ({
         element: divRef.current,
-        label
-    }), [divRef.current]);
+        label: label ?? divRef.current?.innerText
+    }), [divRef.current, label]);
 
     return <div ref={divRef} className={className}>{
             label

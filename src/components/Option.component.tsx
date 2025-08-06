@@ -30,7 +30,7 @@ const Option = forwardRef<OptionObjectRef, OptionProps>((props: OptionProps, ref
         }
 
         if(props.label && props.children)
-            throw new Error ("Label definition duplicated");
+            throw new Error ("Duplicate label definition");
 
         if(props.label)
             setLabel(props.label);
@@ -53,7 +53,7 @@ const Option = forwardRef<OptionObjectRef, OptionProps>((props: OptionProps, ref
         label,
         value,
         selected: props.selected ?? false
-    }), [props.label, props.value, props.selected, props.children])
+    }), [props.label, props.value, props.selected, props.children, internalRef.current])
 
     return (
         <div ref={internalRef} className={`form-option ${props.selected ? 'selected' : ''}`} onClick={handleClick}>

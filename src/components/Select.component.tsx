@@ -5,6 +5,7 @@ import { Placeholder, PlaceholderObjectRef, PlaceholderProps } from "./Placehold
 import Option, { OptionObjectRef, OptionProps } from "./Option.component";
 import './Select.scss';
 import { detectNode, handleNodeValue } from "./libs/settingElements";
+import { NoOptions } from "./NoOptions.component";
 
 
 
@@ -32,6 +33,7 @@ export interface SelectProps {
     suffix?: ReactNode,
     options?: ReactNode,
     placeholder?: ReactNode,
+    noOptions?:ReactNode,
     className?: string,
     onChange?: (value: string | undefined | null, label: ReactNode) => void,
     open?: boolean
@@ -59,6 +61,8 @@ export const Select = forwardRef<SelectObjectRef, SelectProps>((props: SelectPro
     const [optionsEls, setOptionsEls] = useState<ReactElement<OptionProps>[] | undefined>(undefined);
     const optionsRef = useRef<(OptionObjectRef | undefined)[] | undefined>(null);
 
+    const [valueExist, setValueExist] = useState(false); 
+
     let internalClassname = '';
 
     if (props.className)
@@ -67,15 +71,18 @@ export const Select = forwardRef<SelectObjectRef, SelectProps>((props: SelectPro
     const handleOptionClick = (selection: {value: string, label: ReactNode}) => {
         setValueEl(createElement(Value, {label: selection.label, value: selection.value, ref: valueRef}));
         props.onChange?.(selection.value, selection.label);
+        setValueExist(!!selection.value)
     }
 
-    function setInitialNodes() {
+    const setInitialNodes = () => {
 
         setPrefixEl(detectNode(props.prefix, Prefix, childrenArray, prefixRef));
         setSuffixEl(detectNode(props.suffix, Suffix, childrenArray, suffixRef));
         setPlaceholderEl(detectNode(props.placeholder, Placeholder, childrenArray, placeholderRef));
-        setValueEl(detectNode(props.value, Value, childrenArray, valueRef));
-
+        const temporalValue = detectNode(props.value, Value, childrenArray, valueRef);
+        setValueEl(temporalValue);
+        setValueExist(!!temporalValue);
+        
         let optionsInternal: ReactElement<OptionProps>[] | undefined = undefined;
         const optionsFromProps = props.options;
 
@@ -88,6 +95,7 @@ export const Select = forwardRef<SelectObjectRef, SelectProps>((props: SelectPro
                     const refCallback = (el: OptionObjectRef | null) => {
                         optionsRef.current![index] = el!;
                     }
+                    
                     return handleNodeValue(opt, Option, { ref: refCallback, onSelect: handleOptionClick }) as ReactElement<OptionProps>;
                 });
             } else {
@@ -101,8 +109,8 @@ export const Select = forwardRef<SelectObjectRef, SelectProps>((props: SelectPro
                 const refCallback: Ref<OptionObjectRef | undefined> = (el: OptionObjectRef | undefined) => {
                     optionsRef.current![index] = el;
                 }
-
-                newOptions.push(cloneElement(child, { ref: refCallback, onSelect: handleOptionClick} as RefAttributes<OptionProps>) as ReactElement<OptionProps>);
+                const newObject = handleNodeValue(child, Option, {ref: refCallback, onSelect: handleOptionClick});
+                newOptions.push(newObject);
             });
             optionsInternal = newOptions;
         }
@@ -145,7 +153,7 @@ export const Select = forwardRef<SelectObjectRef, SelectProps>((props: SelectPro
         <div ref={internalRef} className={`react-select ${internalClassname ?? ''} ${isOpen ? 'open' : ''}`} onClick={() => setIsOpen((prev) => prev ? false : true)} tabIndex={0}>
             <div className="form-value-box">
                 {prefixEl}
-                {valueEl
+                {valueExist
                     ? valueEl
                     : placeholderEl
                 }
@@ -154,7 +162,11 @@ export const Select = forwardRef<SelectObjectRef, SelectProps>((props: SelectPro
             {isOpen
                 ? (
                     <div className="form-options-box" ref={optionBoxRef}>
-                        {optionsEls}
+                        {
+                            optionsEls?.length
+                                ? optionsEls
+                                : props.noOptions ?? <NoOptions>No options to show</NoOptions>
+                        }
                     </div>
                 )
                 : null

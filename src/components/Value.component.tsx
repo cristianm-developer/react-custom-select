@@ -19,6 +19,7 @@ export const Value = forwardRef<ValueObjectRef, ValueProps>((props: ValueProps, 
     const [value, setValue] = useState<string|null|undefined>(null);
 
     useLayoutEffect(() => {
+        
         if (props.value) {
             setValue(props.value);
         } else if (internalRef.current) {
@@ -26,7 +27,7 @@ export const Value = forwardRef<ValueObjectRef, ValueProps>((props: ValueProps, 
         }
 
         if(props.label && props.children)
-            throw new Error("Label definition duplicated");
+            throw new Error("Duplicate label definition");
 
         if(props.label)
             setLabel(props.label);
