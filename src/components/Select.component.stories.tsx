@@ -29,7 +29,7 @@ export const Default: Story = {
         return <Select {...args} >
             <Prefix>Prefix</Prefix>
             <Suffix>Suffix</Suffix>            
-{/*      
+     
             <Option value='1'>Test 1</Option>
             <Option value='2'>Test 2</Option>
             <Option value='3'>Test 3</Option>
@@ -37,7 +37,7 @@ export const Default: Story = {
             <Option value='5'>Test 5</Option>
             <Option value='6'>Test 6</Option>
             <Option value='7'>Test 7</Option>
-            <Option value='8'>Test 8</Option> */}
+            <Option value='8'>Test 8</Option>
         </Select>
     }
     
