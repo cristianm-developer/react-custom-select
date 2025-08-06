@@ -160,6 +160,8 @@ export const ValueAsChildren: Story = {
         onChange: (value, label) => { action('onChange')(value, label) }
     },
     render: (args) => (
+        
+        
         <Select {...args}>
             <Value>Value Test</Value>
             <Option>Option A</Option>

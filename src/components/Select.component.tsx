@@ -18,6 +18,7 @@ export interface SelectObjectRef {
     suffixRef: AddonObjectRef | null;
     valueRef: ValueObjectRef | null;
     placeholderRef: PlaceholderObjectRef | null;
+    optionsRef: (OptionObjectRef | undefined)[] | null | undefined;
 
     open: () => void;
     close: () => void;
@@ -163,6 +164,9 @@ export const Select = forwardRef<SelectObjectRef, SelectProps>((props: SelectPro
                get placeholderRef() {
                    return placeholderRef.current;
                },
+               get optionsRef(){
+                return  optionsRef.current;
+               },
    
                close: () => setIsOpen(false),
                open: () => setIsOpen(true),
@@ -184,6 +188,17 @@ export const Select = forwardRef<SelectObjectRef, SelectProps>((props: SelectPro
            isOpen
        ]);
 
+    function handleClickOutside(event: MouseEvent) {
+            if(optionBoxRef.current && !optionBoxRef.current.contains(event.target as Node))
+                setIsOpen(false);
+        }
+
+    useEffect(() => {
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+
     return <>
         <div ref={internalRef} className={`react-select ${internalClassname ?? ''} ${isOpen ? 'open' : ''}`} onClick={() => setIsOpen((prev) => prev ? false : true)} tabIndex={0}>
             <div ref={formValueBox} className="form-value-box">
@@ -194,19 +209,15 @@ export const Select = forwardRef<SelectObjectRef, SelectProps>((props: SelectPro
                 }
                 {suffixEl}
             </div>
-            {isOpen
-                ? (
-                    <div className="form-options-box" ref={optionBoxRef}>
-                        {
-                            optionsEls?.length
-                                ? optionsEls
-                                : props.noOptions ?? <NoOptions>No options to show</NoOptions>
-                        }
-                    </div>
-                )
-                : null
-            }
-
+      
+            <div className="form-options-box" hidden={!isOpen} ref={optionBoxRef}>
+                {
+                    optionsEls?.length
+                        ? optionsEls
+                        : props.noOptions ?? <NoOptions>No options to show</NoOptions>
+                }
+            </div>
+        
         </div>
     </>;
 });

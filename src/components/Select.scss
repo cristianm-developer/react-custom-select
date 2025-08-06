@@ -35,6 +35,10 @@
         flex-direction: column;
         overflow: hidden auto ;
 
+        &[hidden]{
+            display: none;
+        }
+
         .form-option, .form-no-options{
             padding: 2px 4px;
 
