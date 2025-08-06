@@ -32,7 +32,7 @@ export function handleNodeValue<T extends keyof JSX.IntrinsicElements | JSXEleme
     if (isValidElement(node) && node.type === targetNode) {
         const element = node as ReactElement<any> & { ref?: Ref<any> };
         const combinedRef = composeRefs(element.ref, propsOref.ref);
-        return cloneElement(node, { ref: combinedRef } as any);
+        return cloneElement(node, { ...propsOref, ref: combinedRef } as any);
     }
 
     throw new Error(`Invalid node type. Expected ${targetNode} but received ${typeof node}`);
